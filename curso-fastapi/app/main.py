@@ -1,116 +1,89 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from typing import Optional
 
 app = FastAPI()
-app.version ="0.0.1"
-app.title = "Peliculas"
+app.title = "Mi aplicación con  FastAPI"
+app.version = "0.0.1"
 
-class Movie(BaseModel):# crear un esquema para generalizar las clases detre las direferentes metodos
-    id: Optional[int] = None #requerir un valor como opcional
-    title: str = Field(min_length=4, max_length=10, default="mi pelicula")#field sirve para poner reglas y crear valores por defualt 
-    overview: str
-    year: int
-    rating: float
-    category: str
-    
+class Movie(BaseModel):
+    id: Optional[int] = None
+    title: str = Field(min_length=5, max_length=15)
+    overview: str = Field(min_length=15, max_length=50)
+    year: int = Field(le=2022)
+    rating:float = Field(ge=1, le=10)
+    category:str = Field(min_length=5, max_length=15)
+
     class Config:
         schema_extra = {
             "example": {
                 "id": 1,
-                "title": "título",
-                "overview": "Descripción de la pelicula",
-                "year": 2012,
-                "rating": 10,
-                "category": "Categoria"
-                }
+                "title": "Mi película",
+                "overview": "Descripción de la película",
+                "year": 2022,
+                "rating": 9.8,
+                "category" : "Acción"
+            }
         }
 
 movies = [
     {
-        'id': 1,
-        'title': 'Avatar',
-        'overview': "En un exuberante planeta llamado Pandora viven los Na'vi, seres que ...",
-        'year': '2009',
-        'rating': 7.8,
-        'category': 'Acción'    
-    } ,    {
-        'id': 2,
-        'title': 'pepe',
-        'overview': "En un exuberante planeta llamado Pandora viven los Na'vi, seres que ...",
-        'year': '2009',
-        'rating': 7.8,
-        'category': 'Acción'    
-    } ,    {
-        'id': 3,
-        'title': 'pablo',
-        'overview': "En un exuberante planeta llamado Pandora viven los Na'vi, seres que ...",
-        'year': '2009',
-        'rating': 7.8,
-        'category': 'Acción'    
-    } 
+		"id": 1,
+		"title": "Avatar",
+		"overview": "En un exuberante planeta llamado Pandora viven los Na'vi, seres que ...",
+		"year": "2009",
+		"rating": 7.8,
+		"category": "Acción"
+	},
+    {
+		"id": 2,
+		"title": "Avatar",
+		"overview": "En un exuberante planeta llamado Pandora viven los Na'vi, seres que ...",
+		"year": "2009",
+		"rating": 7.8,
+		"category": "Acción"
+	}
 ]
 
-@app.get("/", tags=["home"])
-def root():
-    return "hola"
+@app.get('/', tags=['home'])
+def message():
+    return HTMLResponse('<h1>Hello world</h1>')
 
-
-@app.get("/movies", tags=["movie"])
+@app.get('/movies', tags=['movies'])
 def get_movies():
     return movies
 
-
-@app.get("/movies/", tags=["movie"] )
-def get_movie_by_query(category: str):
-    query = lambda item: item["category"] == category
-    return [item for item in movies if item["category"] == category]
-
-
-@app.get("/movies/{id}", tags=["movie"])
-def get_movie(id:int):
+@app.get('/movies/{id}', tags=['movies'])
+def get_movie(id: int = Path(ge=1, le=2000)):
     for item in movies:
-        if  (item["id"]==id):
+        if item["id"] == id:
             return item
     return []
 
-@app.get('/contact', response_class=HTMLResponse)
-def get_list():
-    return """
-        <h1>Hola soy una pagina</h1>
-        <p>soy un parrafo</p>
-    """
+@app.get('/movies/', tags=['movies'])
+def get_movies_by_category(category: str = Query(min_length=5, max_length=15)):
+    return [ item for item in movies if item['category'] == category ]
 
-@app.post("/movies", tags=["movies"])#El metodo body ayuda a evitar que se requieran cada uno de los parametros dentro de la url
-def post_movies(id:int = Body(), title:str = Body(), overview:str= Body(),year:int= Body(), rating:float= Body(), category:str= Body()):
-    movies.append(
-        {
-        "id": id,
-        "title": title,
-        "overview": overview,
-        "year": year,
-        "rating": rating,
-        "category": category
-        }
-    )
+@app.post('/movies', tags=['movies'])
+def create_movie(movie: Movie):
+    movies.append(movie)
     return movies
 
-@app.put("/movies/{id}", tags=["movies"])
-def put_movies(id:int, movie :Movie):
-    for item in movies:
-        if item["id"] == id:
-            item["title"]=movie.title
-            item["overview"]=movie.overview
-            item["year"]=movie.year
-            item["rating"]=movie.rating
-            item["category"]=movie.category
-    return movies
+@app.put('/movies/{id}', tags=['movies'])
+def update_movie(id: int, movie: Movie):
+	for item in movies:
+		if item["id"] == id:
+			item['title'] = movie.title
+			item['overview'] = movie.overview
+			item['year'] = movie.year
+			item['rating'] = movie.rating
+			item['category'] = movie.category
+			return movies
 
-@app.delete("/movies/{id}", tags=["movies"])
-def delete_movies(id:int):
+@app.delete('/movies/{id}', tags=['movies'])
+def delete_movie(id: int):
     for item in movies:
         if item["id"] == id:
             movies.remove(item)
-    return movies
-    
+            return movies
