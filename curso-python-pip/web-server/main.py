@@ -6,7 +6,7 @@ app = FastAPI()
 
 @app.get('/')
 def get_list():
-    return [1,2,3,]
+    return [1,2,3,4]
 
 @app.get('/contact', response_class=HTMLResponse)
 def get_list():
