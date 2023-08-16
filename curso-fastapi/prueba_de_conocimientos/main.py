@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -10,7 +11,8 @@ from starlette.requests import Request
 from jwt_manager import decode_token, encode_token
 
 app = FastAPI()
-
+app.title = "Mi aplicación con  FastAPI"
+app.version = "0.0.1"
 # Configure CORS settings
 origins = [
     "http://localhost:3000",  # Replace with the URL of your Next.js app
@@ -46,26 +48,6 @@ proyectos = [
         "urlGithub": "https://github.com/proyecto3",
         "urlYoutube": "https://www.youtube.com/watch?v=video3",
         "blogContent": "Este es un contenido autogenerado para el proyecto 3."
-    },
-    {
-        "id": 4,
-        "name": "Proyecto",
-        "descripcion": "Innovación en el espacio de la salud",
-        "tecnologies": ["java", "spring", "angular"],
-        "imagen": "SaludTech.png",
-        "urlGithub": "https://github.com/proyecto4",
-        "urlYoutube": "https://www.youtube.com/watch?v=video4",
-        "blogContent": "Este es un contenido autogenerado para el proyecto 4."
-    },
-    {
-        "id": 5,
-        "name": "Proyecto",
-        "descripcion": "Transformando la educación",
-        "tecnologies": ["ruby", "rails", "vue", "nextjs"],
-        "imagen": "EducacionApp.png",
-        "urlGithub": "https://github.com/proyecto5",
-        "urlYoutube": "https://www.youtube.com/watch?v=video5",
-        "blogContent": "Este es un contenido autogenerado para el proyecto 5."
     }
 ]
 
@@ -87,7 +69,7 @@ class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
         auth = await super().__call__(request)
         data = decode_token(auth.credentials)
-        if data["username"] != "andersonmorillo":
+        if data["username"] != "pepe":
             raise HTTPException(
                 status_code=403, detail="Credenciales incorrectas")
 
@@ -96,7 +78,7 @@ class Proyecto(BaseModel):
     id: Optional[int] = None
     name: str
     descripcion: str
-    tecnologies: list
+    tecnologies: List[str]
     image: str
     urlGithub: Optional[str] = None
     urlYoutube: Optional[str] = None
@@ -116,11 +98,6 @@ class Proyecto(BaseModel):
             }
         }
 
-# Send the proyects:
-@app.get("/proyecto", response_model=List[Proyecto], tags=["proyecto"])
-def get_proyects() -> List[Proyecto]:
-    return JSONResponse(content=proyectos, status_code=200)
-
 
 # send a proyect
 @app.get("/Proyecto/{id}", response_model=Proyecto, tags=["proyecto"])
@@ -128,7 +105,7 @@ def get_proyecto(id: int):
     for proyecto in proyectos:
         if proyecto["id"] == id:
             return JSONResponse(content=proyecto)
-    return JSONResponse({"mensaje": "no se encontró el proyecto"})
+    return JSONResponse(status_code=404, content=[])
 
 # filter a proyects tecnology
 @app.get("/proyectos/", tags=["proyecto"], response_model=List[Proyecto])
@@ -142,10 +119,31 @@ async def get_proyectos_by_tecnologies(q: str = Query(min_length=3, max_length=1
     return JSONResponse(content=projectList, status_code=200)
 
 
-@app.get("/proyectos", response_model=List[Proyecto], tags=["proyecto"])
-def get_proyecto():
-    return "sola"
+@app.get("/proyectos", response_model=List[Proyecto], tags=["proyecto"], status_code=200)
+def get_proyectos() -> List[Proyecto]:
+    proyectos_serializable = jsonable_encoder(proyectos)
+    return JSONResponse(content=proyectos_serializable, status_code=200)
 
+
+#create project
+@app.post("/proyecto", tags=["proyecto"], response_model=dict)
+def create_project(project: Proyecto) -> dict:
+    proyectos.append(project)
+    return JSONResponse(content={"message":"proyecto creado"}, status_code=201)
+ 
+#update a project
+@app.put("/proyecto/{id}", tags=["proyecto"], response_model=List[Proyecto])
+def update_project(id: int, project: Proyecto) -> dict:
+    for proyecto in proyectos:
+        if proyecto["id"]  == id:
+            proyecto["name"] = project.name      
+            proyecto["descripcion"] = project.descripcion       
+            proyecto["tecnologies"] = project.tecnologies        
+            proyecto["urlGithub"] = project.urlGithub     
+            proyecto["urlYoutube"] = project.urlYoutube 
+            proyecto["image"] = project.image
+            proyecto["blogContent"] = project.blogContent
+    return JSONResponse( content={"message": f"Se ha modificado el proyecto {id}"}, status_code=200)
 
 @app.get("/markdown", response_class=HTMLResponse)
 def render_markdown():
