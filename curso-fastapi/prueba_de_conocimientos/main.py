@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.security.http import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
-from typing import Union, Annotated, Optional, List
+from typing import Any, Coroutine, Union, Annotated, Optional, List
+
+from starlette.requests import Request
+from jwt_manager import decode_token, encode_token
 
 app = FastAPI()
 
@@ -11,7 +16,7 @@ origins = [
     "http://localhost:3000",  # Replace with the URL of your Next.js app
 ]
 
-dataBase = [
+proyectos = [
     {
         "id": 1,
         "nombre": "Proyecto 1",
@@ -39,36 +44,59 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+class User(BaseModel):
+    username: str
+    password: str
 
-class Proyectos(BaseModel):
+class JWTBearer(HTTPBearer):
+    async def __call__(self, request: Request):
+        auth = await super().__call__(request)
+        data = decode_token(auth.credentials)
+        if data["username"] != "andersonmorillo":
+            raise HTTPException(status_code=403, detail="Credenciales incorrectas")
+
+class Proyecto(BaseModel):
     id: Optional[int] = None
     nombre: str
     descripcion: str
-    imagen: str
+    tecnologias: list 
+    imagen: str 
     urlGithub: Optional[str] = None
     urlYoutube: Optional[str] = None
     blogContent: Optional[str] = None
 
     class Config:
-        pass
-    schema_extra = {
-        "example": {
-            "id": 1,
-            "nombre": "Proyecto 1",
-            "descripcion": "El mejor protecto del mundo",
-            "imagen": "El Bicho",
-            "urlGithub": "link github",
-            "urlYoutube": "link",
-            "blogContent": "contenido autogenerado"
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "nombre": "Proyecto 1",
+                "descripcion": "El mejor protecto del mundo",
+                "tecnologias": ["python"],
+                "imagen": "El Bicho",
+                "urlGithub": "link github",
+                "urlYoutube": "link",
+                "blogContent": "contenido autogenerado"
+            }
         }
-    }
 
 #Send the proyects:
-@app.get("/", response_model=List[Proyectos], tags=["proyecto"])
-def get_proyects() -> List[Proyectos]:
-    return JSONResponse(content=dataBase, status_code=200)
+@app.get("/proyecto", response_model=List[Proyecto], tags=["proyecto"])
+def get_proyects() -> List[Proyecto]:
+    return JSONResponse(content=proyectos, status_code=200)
 
 
+#send a proyect
+@app.get("/Proyecto/{id}", response_model=Proyecto, tags= ["proyecto"])
+def get_proyecto(id: int):
+    for proyecto in proyectos:
+        if proyecto["id"] == id:   
+            return JSONResponse(content=proyecto)
+    return JSONResponse({"mensaje":"no se encontró el proyecto"})
+
+#filter a proyects
+@app.get("/proyectos", response_model=List[Proyecto], tags=["proyecto"])
+def get_proyecto():
+    return "sola"
 
 @app.get("/markdown", response_class=HTMLResponse)
 def render_markdown():
