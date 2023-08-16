@@ -22,10 +22,6 @@ Atributos:
  contenido del blog (puede ser un htmlresponce que se le injecte el contenido manualmente con HTML),
  API thats bring back estimated of how much does it take to read the article.
 
-```python
-def greet(name):
-    print(f"Hello, {name}!")
-
 
 ## posibles clases:
 Python basics.
