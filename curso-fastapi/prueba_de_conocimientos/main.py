@@ -12,7 +12,6 @@ from jwt_manager import decode_token, encode_token
 
 app = FastAPI()
 app.title = "Mi aplicación con  FastAPI"
-app.version = "0.0.1"
 # Configure CORS settings
 origins = [
     "http://localhost:3000",  # Replace with the URL of your Next.js app
@@ -24,7 +23,7 @@ proyectos = [
         "name": "Proyecto 1",
         "descripcion": "El mejor protecto del mundo",
         "tecnologies": ["python"],
-        "imagen": "El Bicho",
+        "image": "El Bicho",
         "urlGithub": "link github",
         "urlYoutube": "link",
         "blogContent": "contenido autogenerado"
@@ -34,30 +33,14 @@ proyectos = [
         "name": "Proyecto 2",
         "descripcion": "descripcion",
         "tecnologies": ["python", "nextjs", "react"],
-        "imagen": "no",
+        "image": "no",
         "urlGithub": "link github",
         "urlYoutube": "link youtbe",
         "blogContent": "contenido autogenerado"
     },
-    {
-        "id": 3,
-        "name": "Proyecto 3",
-        "descripcion": "Explorando nuevas ideas",
-        "tecnologies": ["javascript", "nodejs", "mongodb"],
-        "imagen": "Proyecto3.png",
-        "urlGithub": "https://github.com/proyecto3",
-        "urlYoutube": "https://www.youtube.com/watch?v=video3",
-        "blogContent": "Este es un contenido autogenerado para el proyecto 3."
-    }
+
 ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 class User(BaseModel):
@@ -105,7 +88,7 @@ def get_proyecto(id: int):
     for proyecto in proyectos:
         if proyecto["id"] == id:
             return JSONResponse(content=proyecto)
-    return JSONResponse(status_code=404, content=[])
+    return HTTPException(status_code=404, detail="problemas")
 
 # filter a proyects tecnology
 @app.get("/proyectos/", tags=["proyecto"], response_model=List[Proyecto])
@@ -121,8 +104,7 @@ async def get_proyectos_by_tecnologies(q: str = Query(min_length=3, max_length=1
 
 @app.get("/proyectos", response_model=List[Proyecto], tags=["proyecto"], status_code=200)
 def get_proyectos() -> List[Proyecto]:
-    proyectos_serializable = jsonable_encoder(proyectos)
-    return JSONResponse(content=proyectos_serializable, status_code=200)
+    return JSONResponse(content=proyectos, status_code=200)
 
 
 #create project
@@ -132,18 +114,19 @@ def create_project(project: Proyecto) -> dict:
     return JSONResponse(content={"message":"proyecto creado"}, status_code=201)
  
 #update a project
-@app.put("/proyecto/{id}", tags=["proyecto"], response_model=List[Proyecto])
+@app.put("/proyecto/{id}", tags=["proyecto"], response_model=dict)
 def update_project(id: int, project: Proyecto) -> dict:
     for proyecto in proyectos:
         if proyecto["id"]  == id:
-            proyecto["name"] = project.name      
-            proyecto["descripcion"] = project.descripcion       
-            proyecto["tecnologies"] = project.tecnologies        
-            proyecto["urlGithub"] = project.urlGithub     
-            proyecto["urlYoutube"] = project.urlYoutube 
-            proyecto["image"] = project.image
-            proyecto["blogContent"] = project.blogContent
-    return JSONResponse( content={"message": f"Se ha modificado el proyecto {id}"}, status_code=200)
+            proyecto['name'] = project.name      
+            proyecto['descripcion'] = project.descripcion       
+            proyecto['tecnologies'] = project.tecnologies        
+            proyecto['urlGithub'] = project.urlGithub     
+            proyecto['urlYoutube'] = project.urlYoutube 
+            proyecto['image'] = project.image
+            proyecto['blogContent'] = project.blogContent
+            return JSONResponse( content={"message": f"Se ha modificado el proyecto {id}"}, status_code=200)
+    raise HTTPException(status_code=404, detail="no project ID")
 
 @app.get("/markdown", response_class=HTMLResponse)
 def render_markdown():
