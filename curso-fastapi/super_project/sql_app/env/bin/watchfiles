@@ -1,4 +1,4 @@
-#!/home/ander/platzi/curso-fastapi/pet_app/env/bin/python3
+#!/home/ander/platzi/curso-fastapi/super_project/sql_app/env/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
