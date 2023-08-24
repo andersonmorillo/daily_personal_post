@@ -13,7 +13,7 @@ def get_user(db: Session, user_id: int):
 
 def create_user(db: Session, user: schemas.CreateUser):
     hashed_password = jwt_manager.hash_password(user.password)
-    db_user = models.User(mail=user.mail, name=user.name,
+    db_user = models.User(email=user.email, username=user.username,
                           hashed_password=hashed_password)
     db.add(db_user)
     db.commit()

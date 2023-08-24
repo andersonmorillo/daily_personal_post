@@ -1,7 +1,6 @@
 from jwt import decode, encode
 import bcrypt
 
-
 def decode_token(token_encode: str) -> dict:
     user_info: dict = decode(token_encode, key="secreto", algorithms=["HS256"])
     return user_info
@@ -19,5 +18,5 @@ def hash_password(password: str) -> str:
 
 
 def check_password(hashed_password: str, password: str) -> bool:
-    response: bool = bcrypt.chechpw(password.encode("utf-8"), hashed_password)
+    response: bool = bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8"))
     return response

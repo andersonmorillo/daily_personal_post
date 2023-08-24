@@ -30,8 +30,8 @@ class Pet(PetBase):
 
 # base model para el usuario
 class UserBase(BaseModel):
-    mail: str
-    name: str
+    email: str
+    username: str
     
 
 
@@ -41,8 +41,11 @@ class CreateUser(UserBase):
 
 class User(UserBase):
     id: int
-    pets: list[Pet] = []
     is_active: bool = True
+    pets: list[Pet] = []
 
     class Config:
         orm_mode = True
+
+class UserInDB(User):
+    hashed_password: str

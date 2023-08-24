@@ -32,11 +32,11 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    hashed_password = Column(String)
-    name = Column(String, index=True)
-    mail = Column(String, unique=True)
+    email = Column(String, unique=True)
+    username = Column(String, index=True)
     is_active = Column(Boolean, default=True)
-
+    hashed_password = Column(String)
+    
     pets = relationship("Pet", back_populates="owner")
 
 
@@ -46,5 +46,5 @@ class Pet(Base):
     name = Column(String, index=True)
     race = Column(String)
     owner_id = Column(Integer, ForeignKey("users.id"))
-
+    
     owner = relationship("User", back_populates="pets")
