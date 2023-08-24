@@ -28,6 +28,7 @@ class Pet(PetBase):
         orm_mode = True
 
 
+
 # base model para el usuario
 class UserBase(BaseModel):
     email: str
@@ -49,3 +50,11 @@ class User(UserBase):
 
 class UserInDB(User):
     hashed_password: str
+    
+
+class TokenData(BaseModel):
+    username: str
+    
+class Token(BaseModel):
+    access_token: str
+    token_type: str
