@@ -2,5 +2,10 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"
     },
-    "python.formatting.provider": "none"
+    "python.formatting.provider": "black",
+    "python.analysis.extraPaths": [
+        "./database_project"
+    ],
+    "editor.defaultFormatter": "ms-python.autopep8",
+    "editor.formatOnSave": true
 }
