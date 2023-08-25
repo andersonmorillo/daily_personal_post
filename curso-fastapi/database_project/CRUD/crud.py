@@ -37,14 +37,15 @@ def get_pets(db:Session, skip: int=0, limit: int=100):
     return db.query(models.Pet).offset(skip).limit(limit).all()
 
 
-def delete_pet_user(db: Session, current_user, pet_id:int):
+def delete_pet_user(db: Session, current_user, pet_id: int):
     try:
-        if db.query(current_user.pets).filter(pet_id).first() is not None:
-            current_user.pets.remove(id)
-            db.commit()
-            return {"response": f"animal {id} eliminado del usuario {current_user.username}"}
-        else:
-            return {"response": "No encontrado"}
-    except HTTPException:
-        return {"response": HTTPException}
+        pet_to_delete = db.query(current_user.pets).filter_by(id=pet_id).first()
         
+        if pet_to_delete:
+            current_user.pets.remove(pet_to_delete)
+            db.commit()
+            return {"response": f"Animal {pet_id} eliminado del usuario {current_user.username}"}
+        else:
+            return {"response": "Animal no encontrado"}
+    except Exception as ex:
+        return {"response": str(ex)}
