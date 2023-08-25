@@ -2,7 +2,7 @@ from models import models
 from schemas import schemas
 from middlewares import jwt_manager
 from sqlalchemy.orm import Session
-
+from fastapi import HTTPException
 # I need to create a pet and user CRUD, remember that CRUD means Create, Read, Update, Delete.
 # so let create a function for each one of them. firts let's create a pet.
 
@@ -37,6 +37,14 @@ def get_pets(db:Session, skip: int=0, limit: int=100):
     return db.query(models.Pet).offset(skip).limit(limit).all()
 
 
-def get_pets_by_user(db:Session, current_user: models.User, skip: int=0, limit: int=10):
-    pets = current_user.pets
-    return pets
+def delete_pet_user(db: Session, current_user, pet_id:int):
+    try:
+        if db.query(current_user.pets).filter(pet_id).first() is not None:
+            current_user.pets.remove(id)
+            db.commit()
+            return {"response": f"animal {id} eliminado del usuario {current_user.username}"}
+        else:
+            return {"response": "No encontrado"}
+    except HTTPException:
+        return {"response": HTTPException}
+        

@@ -10,6 +10,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from typing import Annotated
 from jose import JWTError
 from passlib.context import CryptContext
+from fastapi.encoders import jsonable_encoder
 SECRET_KEY = "secreto"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -85,17 +86,18 @@ async def read_users_me(
 
 
 @app.get("/users/me/pets/")
-async def read_own_items(
+async def read_own_pets(
         current_user: Annotated[User, Depends(get_current_active_user)]):
-    return crud.get_pets_by_user(DB, current_user=current_user)
+    return current_user.pets
 
 
-@app.post("/users/me/pets/")
+@app.post("/users/me/pets/", response_model=Pet)
 async def register_pet(pet: PetCreate, current_user: Annotated[User, Depends(get_current_active_user)]):
-    return crud.register_pet(DB, current_user.id, pet)
+    return JSONResponse(content=jsonable_encoder(crud.register_pet(DB, current_user.id, pet)), status_code=201)
     
-
-
+@app.delete("/users/me/pets/{id}")
+def user_delete_pet(current_user: Annotated[User, Depends(get_current_active_user)], pet_id: int=id, db: SessionLocal = Depends(get_db)):
+    return crud.delete_pet_user(db, current_user, pet_id)
 
 @app.get("/users/{id}")
 def get_user_info(id: int, db: SessionLocal = Depends(get_db)):
