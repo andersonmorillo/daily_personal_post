@@ -1,3 +1,6 @@
+SECRET_KEY = "secreto"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 from fastapi import Depends, FastAPI, Body, HTTPException, Path, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
